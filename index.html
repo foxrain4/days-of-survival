@@ -63,6 +63,7 @@
   };
 
   let day = 1;
+  let gameOver = false;
 
   const events = [
     {
@@ -110,11 +111,65 @@
       `Day ${day} | Health: ${stats.health} | Sanity: ${stats.sanity} | Supplies: ${stats.supplies} | Memories: ${stats.memories}`;
   }
 
+  function checkGameEnd() {
+  if (stats.memories >= 7) {
+    if (stats.sanity >= 70) {
+      endGame(`You remember the warmth of your name.  
+The stitched world fades, thread by thread, and light spills in like sunrise over water.  
+You are whole again. You awaken, not with fear—but with peace.`);
+    } else {
+      endGame(`Your memories return, fragmented but loud.  
+But your mind cannot hold the storm.  
+You awaken... but something follows.`);
+    }
+    return true;
+  }
+
+  if (stats.health <= 0 && stats.supplies <= 0) {
+    endGame(`Your body collapses beneath the weight of the dream.  
+No more blood to give. No more air to breathe.  
+You become a quiet absence in the stitched world.  
+And it forgets you.`);
+    return true;
+  }
+
+  if (stats.sanity <= 15 && stats.supplies >= 6) {
+    endGame(`Your thoughts are no longer your own.  
+You stop asking why the world breathes. You begin to breathe with it.  
+Supplies pile around you, untouched. You no longer hunger.  
+You have become part of this place—its caretaker, its echo.`);
+    return true;
+  }
+
+  if (stats.health <= 0) {
+    endGame(`Your body gives out. You collapse into warm, pulsing soil.  
+The world closes its eye.`);
+    return true;
+  }
+
+  if (stats.sanity <= 0) {
+    endGame(`You forget even what it meant to be lost.  
+You become the dream, unthreaded from thought.`);
+    return true;
+  }
+
+  return false;
+}
+
+function endGame(finalText) {
+  gameOver = true;
+  document.getElementById("event-text").innerText = finalText;
+  document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="location.reload()">Restart</button>`;
+}
+
+
   function getRandomEvent() {
     return events[Math.floor(Math.random() * events.length)];
   }
 
   function loadEvent() {
+    if (gameOver) return;
+
     const e = getRandomEvent();
     const textDiv = document.getElementById("event-text");
     const choicesDiv = document.getElementById("choices");
@@ -130,17 +185,19 @@
         textDiv.innerText = choice.result;
         applyOutcome(choice.outcome);
         updateStatsDisplay();
+
         setTimeout(() => {
           day++;
           updateStatsDisplay();
-          loadEvent();
+          if (!checkGameEnd()) {
+            loadEvent();
+          }
         }, 2000);
       };
       choicesDiv.appendChild(btn);
     });
   }
 
-  // Initial 'Begin' button
   document.querySelector(".choice-btn").onclick = () => {
     updateStatsDisplay();
     loadEvent();
